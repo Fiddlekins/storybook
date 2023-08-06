@@ -84,6 +84,5 @@ export const ArgControl: FC<ArgControlProps> = ({ row, arg, updateArgs, isHovere
   // row.key is a hash key and therefore a much safer choice
   const props = { name: key, argType: row, value: boxedValue.value, onChange, onBlur, onFocus };
   const Control = Controls[control.type] || NoControl;
-  console.log(control.type, Control);
   return <Control {...props} {...control} controlType={control.type} />;
 };

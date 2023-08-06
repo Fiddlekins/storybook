@@ -1,6 +1,6 @@
 import { styled } from '@storybook/theming';
 import type { FC } from 'react';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { BooleanControl } from './Boolean';
 import { ColorControl } from './Color';
 import { DateControl } from './Date';
@@ -11,9 +11,27 @@ import { RangeControl } from './Range';
 import { TextControl } from './Text';
 import type { CompositeConfig, CompositeValue, ControlProps, OrderedSubControls } from './types';
 
-const Wrapper = styled.label({
-  display: 'flex',
-});
+const SubControlsContainer = styled.div(() => ({
+  '&&': {
+    display: 'grid',
+    gridTemplateColumns: '[label] 1fr [subcontrol] 4fr',
+    gridTemplateRows: 'auto',
+    gap: 10,
+    alignItems: 'center',
+  },
+}));
+
+const LabelDiv = styled.div(() => ({
+  '&&': {
+    gridColumn: 'label',
+  },
+}));
+
+const SubControlDiv = styled.div(() => ({
+  '&&': {
+    gridColumn: 'subcontrol',
+  },
+}));
 
 type CompositeProps = ControlProps<CompositeValue | null> & CompositeConfig;
 
@@ -24,6 +42,19 @@ function getOrderedSubControls(subControls: CompositeProps['subControls']): Orde
   return Object.keys(subControls).map((name) => {
     return { name, argType: subControls[name] };
   });
+}
+
+function getInputValue(
+  value: CompositeProps['value'],
+  parseDefault: CompositeProps['parseDefault']
+): Record<string, any> {
+  let newInputValue;
+  try {
+    newInputValue = parseDefault(value);
+  } catch (err) {
+    newInputValue = {};
+  }
+  return newInputValue;
 }
 
 const PrimitiveControls: Record<string, FC> = {
@@ -45,7 +76,6 @@ const PrimitiveControls: Record<string, FC> = {
 const NoControl = () => <>-</>;
 
 export const CompositeControl: FC<CompositeProps> = ({
-  name,
   value,
   onChange,
   subControls,
@@ -54,8 +84,9 @@ export const CompositeControl: FC<CompositeProps> = ({
   onBlur,
   onFocus,
 }) => {
-  const [inputValue, setInputValue] = useState<Record<string, any>>({});
-  // const [parseError, setParseError] = useState<Error>(null);
+  const [inputValue, setInputValue] = useState<Record<string, any>>(
+    getInputValue(value, parseDefault)
+  );
 
   const orderedSubControls = getOrderedSubControls(subControls);
 
@@ -70,32 +101,16 @@ export const CompositeControl: FC<CompositeProps> = ({
       try {
         const result = compose(newInputValue);
         onChange(result);
-        // setParseError(null);
       } catch (err) {
-        // setParseError(new Error(`Failed to compose inputs: ${err.toString()}`));
+        // do nothing
       }
     },
     [inputValue, setInputValue, compose, onChange]
-    // [onChange, setParseError]
   );
 
-  useEffect(() => {
-    let newInputValue;
-    try {
-      newInputValue = parseDefault(value);
-    } catch (err) {
-      newInputValue = {};
-    }
-    if (inputValue !== newInputValue) {
-      setInputValue(value);
-    }
-  }, [value, parseDefault, setInputValue]);
-
-  console.log(name, subControls);
-
   return (
-    <Wrapper>
-      {orderedSubControls.map(({ name: subControlName, argType }) => {
+    <SubControlsContainer>
+      {orderedSubControls.map(({ name: subControlName, argType }, index) => {
         const onSubChange = (newValue: any) => {
           handleChange({ [subControlName]: newValue });
         };
@@ -108,8 +123,15 @@ export const CompositeControl: FC<CompositeProps> = ({
           onFocus,
         };
         const Control = PrimitiveControls[argType.control.type] || NoControl;
-        return <Control key={subControlName} {...props} {...argType.control} />;
+        return (
+          <>
+            <LabelDiv>{subControlName}</LabelDiv>
+            <SubControlDiv>
+              <Control {...props} {...argType.control} />
+            </SubControlDiv>
+          </>
+        );
       })}
-    </Wrapper>
+    </SubControlsContainer>
   );
 };
