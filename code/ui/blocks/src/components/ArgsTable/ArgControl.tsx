@@ -23,7 +23,9 @@ export interface ArgControlProps {
   isHovered: boolean;
 }
 
-export const PrimitiveControls: Record<string, FC> = {
+const Controls: Record<string, FC> = {
+  array: ObjectControl,
+  object: ObjectControl,
   boolean: BooleanControl,
   color: ColorControl,
   date: DateControl,
@@ -37,16 +39,10 @@ export const PrimitiveControls: Record<string, FC> = {
   range: RangeControl,
   text: TextControl,
   file: FilesControl,
-};
-
-const Controls: Record<string, FC> = {
-  ...PrimitiveControls,
-  array: ObjectControl,
-  object: ObjectControl,
   composite: CompositeControl,
 };
 
-export const NoControl = () => <>-</>;
+const NoControl = () => <>-</>;
 
 export const ArgControl: FC<ArgControlProps> = ({ row, arg, updateArgs, isHovered }) => {
   const { key, control } = row;

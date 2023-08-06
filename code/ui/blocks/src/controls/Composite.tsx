@@ -1,9 +1,15 @@
-import {styled} from '@storybook/theming';
-import type {FC} from 'react';
-import React, {useCallback, useEffect, useState} from 'react';
-import {NoControl, PrimitiveControls} from "../components/ArgsTable/ArgControl";
-import {OrderedSubControls} from "./index";
-import type {CompositeConfig, CompositeValue, ControlProps} from './types';
+import { styled } from '@storybook/theming';
+import type { FC } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { BooleanControl } from './Boolean';
+import { ColorControl } from './Color';
+import { DateControl } from './Date';
+import { FilesControl } from './Files';
+import { NumberControl } from './Number';
+import { OptionsControl } from './options';
+import { RangeControl } from './Range';
+import { TextControl } from './Text';
+import type { CompositeConfig, CompositeValue, ControlProps, OrderedSubControls } from './types';
 
 const Wrapper = styled.label({
   display: 'flex',
@@ -11,14 +17,32 @@ const Wrapper = styled.label({
 
 type CompositeProps = ControlProps<CompositeValue | null> & CompositeConfig;
 
-function getOrderedSubControls(subControls: CompositeProps["subControls"]): OrderedSubControls {
+function getOrderedSubControls(subControls: CompositeProps['subControls']): OrderedSubControls {
   if (Array.isArray(subControls)) {
     return subControls;
   }
   return Object.keys(subControls).map((name) => {
-    return {name, argType: subControls[name]};
-  })
+    return { name, argType: subControls[name] };
+  });
 }
+
+const PrimitiveControls: Record<string, FC> = {
+  boolean: BooleanControl,
+  color: ColorControl,
+  date: DateControl,
+  number: NumberControl,
+  check: OptionsControl,
+  'inline-check': OptionsControl,
+  radio: OptionsControl,
+  'inline-radio': OptionsControl,
+  select: OptionsControl,
+  'multi-select': OptionsControl,
+  range: RangeControl,
+  text: TextControl,
+  file: FilesControl,
+};
+
+const NoControl = () => <>-</>;
 
 export const CompositeControl: FC<CompositeProps> = ({
   name,
@@ -28,10 +52,10 @@ export const CompositeControl: FC<CompositeProps> = ({
   compose,
   parseDefault,
   onBlur,
-  onFocus
+  onFocus,
 }) => {
   const [inputValue, setInputValue] = useState<Record<string, any>>({});
-  const [_parseError, setParseError] = useState<Error>(null);
+  // const [parseError, setParseError] = useState<Error>(null);
 
   const orderedSubControls = getOrderedSubControls(subControls);
 
@@ -39,19 +63,20 @@ export const CompositeControl: FC<CompositeProps> = ({
     (updatedValue) => {
       const newInputValue = {
         ...inputValue,
-        ...updatedValue
+        ...updatedValue,
       };
       setInputValue(newInputValue);
 
       try {
         const result = compose(newInputValue);
         onChange(result);
-        setParseError(null);
+        // setParseError(null);
       } catch (err) {
-        setParseError(new Error(`Failed to compose inputs: ${err.toString()}`));
+        // setParseError(new Error(`Failed to compose inputs: ${err.toString()}`));
       }
     },
-    [onChange, setParseError]
+    [inputValue, setInputValue, compose, onChange]
+    // [onChange, setParseError]
   );
 
   useEffect(() => {
@@ -64,17 +89,26 @@ export const CompositeControl: FC<CompositeProps> = ({
     if (inputValue !== newInputValue) {
       setInputValue(value);
     }
-  }, [value]);
+  }, [value, parseDefault, setInputValue]);
+
+  console.log(name, subControls);
 
   return (
     <Wrapper>
-      {orderedSubControls.map(({name, argType}) => {
+      {orderedSubControls.map(({ name: subControlName, argType }) => {
         const onSubChange = (newValue: any) => {
-          handleChange({[name]: newValue});
+          handleChange({ [subControlName]: newValue });
         };
-        const props = {name, argType, value: inputValue[name], onChange: onSubChange, onBlur, onFocus};
+        const props = {
+          name: subControlName,
+          argType,
+          value: inputValue[subControlName],
+          onChange: onSubChange,
+          onBlur,
+          onFocus,
+        };
         const Control = PrimitiveControls[argType.control.type] || NoControl;
-        return <Control {...props} {...argType.control} />;
+        return <Control key={subControlName} {...props} {...argType.control} />;
       })}
     </Wrapper>
   );
