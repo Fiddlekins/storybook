@@ -124,12 +124,12 @@ export const CompositeControl: FC<CompositeProps> = ({
         };
         const Control = PrimitiveControls[argType.control.type] || NoControl;
         return (
-          <>
+          <React.Fragment key={subControlName}>
             <LabelDiv>{subControlName}</LabelDiv>
             <SubControlDiv>
               <Control {...props} {...argType.control} />
             </SubControlDiv>
-          </>
+          </React.Fragment>
         );
       })}
     </SubControlsContainer>

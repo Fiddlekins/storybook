@@ -1,6 +1,29 @@
 import { global as globalThis } from '@storybook/global';
 import type { PartialStoryFn, StoryContext } from '@storybook/types';
 
+class RichType {
+  private textInternal: string;
+
+  private valueInternal: number;
+
+  constructor(text: string, value: number) {
+    this.textInternal = text;
+    this.valueInternal = value;
+  }
+
+  get text() {
+    return this.textInternal;
+  }
+
+  get value() {
+    return this.valueInternal;
+  }
+
+  toString() {
+    return `${this.textInternal} and ${this.valueInternal}`;
+  }
+}
+
 export default {
   component: globalThis.Components.Pre,
   decorators: [
@@ -20,7 +43,7 @@ export default {
           return { a: foo, b: bar };
         },
         parseDefault: (val: { a: number; b: string }) => {
-          return { foo: val.a, bar: val.b };
+          return { foo: val.a || 0, bar: val.b };
         },
       },
     },
@@ -36,7 +59,7 @@ export default {
           return x * y * z;
         },
         parseDefault: (val: number) => {
-          return { x: val / 2, y: 2, z: 1 };
+          return { x: val / 2 || 0, y: 2, z: 1 };
         },
       },
     },
@@ -52,7 +75,22 @@ export default {
         },
         parseDefault: (val: string) => {
           const [, name, ageString] = val.match(/^Name: (.*?), Age: (.*?)$/);
-          return { name, age: parseInt(ageString, 10) };
+          return { name, age: parseInt(ageString, 10) || 0 };
+        },
+      },
+    },
+    outputRichType: {
+      control: {
+        type: 'composite',
+        subControls: {
+          text: { control: { type: 'text' } },
+          value: { control: { type: 'number' } },
+        },
+        compose: ({ text, value }: { text: string; value: number }) => {
+          return new RichType(text, value);
+        },
+        parseDefault: (val: RichType) => {
+          return { text: val.text, value: val.value || 0 };
         },
       },
     },
@@ -67,7 +105,7 @@ export default {
           return `${symbol}${amount}`;
         },
         parseDefault: (val: string) => {
-          return { symbol: val.charAt(0), amount: parseInt(val.slice(1), 10) };
+          return { symbol: val.charAt(0), amount: parseInt(val.slice(1), 10) || 0 };
         },
       },
     },
@@ -83,6 +121,7 @@ export const Defined = {
     outputObject: { a: 1, b: 'b' },
     outputNumber: 6,
     outputString: 'Name: Alice, Age: 10',
+    outputRichType: new RichType('sample', 9),
     withSelect: '$600',
   },
 };
