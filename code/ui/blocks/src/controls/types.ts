@@ -26,6 +26,14 @@ export interface ColorConfig {
   startOpen?: boolean;
 }
 
+export type CompositeValue = any;
+export type OrderedSubControls = Array<{ name: string; argType: ArgType }>;
+export interface CompositeConfig {
+  subControls: Record<string, ArgType> | OrderedSubControls;
+  compose: (subComponentValues: Record<string, any>) => CompositeValue;
+  parseDefault: (defaultValue: CompositeValue) => Record<string, any>;
+}
+
 export type DateValue = Date | number;
 export interface DateConfig {}
 

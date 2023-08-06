@@ -5,6 +5,7 @@ import { Link } from '@storybook/components/experimental';
 import {
   BooleanControl,
   ColorControl,
+  CompositeControl,
   DateControl,
   FilesControl,
   NumberControl,
@@ -22,9 +23,7 @@ export interface ArgControlProps {
   isHovered: boolean;
 }
 
-const Controls: Record<string, FC> = {
-  array: ObjectControl,
-  object: ObjectControl,
+export const PrimitiveControls: Record<string, FC> = {
   boolean: BooleanControl,
   color: ColorControl,
   date: DateControl,
@@ -40,7 +39,14 @@ const Controls: Record<string, FC> = {
   file: FilesControl,
 };
 
-const NoControl = () => <>-</>;
+const Controls: Record<string, FC> = {
+  ...PrimitiveControls,
+  array: ObjectControl,
+  object: ObjectControl,
+  composite: CompositeControl,
+};
+
+export const NoControl = () => <>-</>;
 
 export const ArgControl: FC<ArgControlProps> = ({ row, arg, updateArgs, isHovered }) => {
   const { key, control } = row;
@@ -82,5 +88,6 @@ export const ArgControl: FC<ArgControlProps> = ({ row, arg, updateArgs, isHovere
   // row.key is a hash key and therefore a much safer choice
   const props = { name: key, argType: row, value: boxedValue.value, onChange, onBlur, onFocus };
   const Control = Controls[control.type] || NoControl;
+  console.log(control.type, Control);
   return <Control {...props} {...control} controlType={control.type} />;
 };

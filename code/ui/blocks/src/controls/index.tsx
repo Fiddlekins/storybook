@@ -16,6 +16,8 @@ export const ColorControl = (props: ComponentProps<typeof LazyColorControl>) => 
   </Suspense>
 );
 
+export * from './Composite';
+
 export * from './Date';
 
 export * from './Number';
